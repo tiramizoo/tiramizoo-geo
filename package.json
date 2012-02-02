@@ -1,7 +1,7 @@
 {
   "name": "tiramizoo-geo",
   "description": "Geo coding functions for tiramizoo.com",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Gregor Melhorn <gregor.melhorn@tiramizoo.com>",
   "repository": {
     "type": "git",
@@ -9,6 +9,7 @@
   },
   "dependencies": {
       "coffee-script": ">= 1.2.0"
+    , "seq": ">= 0.3.5"
     , "request": ">= 2.9.100"
     , "hashish": ">= 0.0.4"
   },

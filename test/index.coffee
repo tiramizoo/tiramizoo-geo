@@ -26,6 +26,9 @@ describe 'Tiramizoo geo service', ->
         server.get '/maps/api/directions/json', (req, res) ->
           res.json {routes: [{legs: [{distance: {value: 20}}]}]}
 
+        server.get '/maps/api/geocode/json', (req, res) ->
+          res.json {results: [{geometry: {location: {lat: 1, lng: 2}}}]}
+
         server.listen 3001
         done()
 
@@ -35,6 +38,11 @@ describe 'Tiramizoo geo service', ->
 
       it "should calculate the distance", (cbk) ->
         geo.routeDistance {lat: 1, lng: 1}, {lat: 2, lng: 2}, (err, result) ->
+          result.distance?.should.equal 20
+          cbk()
+
+      it "should calculate the distance even if no geo data is given", (cbk) ->
+        geo.routeDistance {city: 'Munich'}, {city: 'Hamburg'}, (err, result) ->
           result.distance?.should.equal 20
           cbk()
 
