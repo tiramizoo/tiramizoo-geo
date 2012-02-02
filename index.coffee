@@ -3,22 +3,6 @@ Hash = require 'hashish'
 querystring = require 'querystring'
 Seq = require 'seq'
 
-cleanGeometry = (address) ->
-  # parse lat and long to float
-  lat = parseFloat address.lat
-  lng = parseFloat address.lng
-
-  # set both values to floating point if conversion was successful
-  unless isNaN(lat) or isNaN(lng)
-    address.lat = lat
-    address.lng = lng
-  else
-    # delete invalid values
-    delete address.lat
-    delete address.lng
-
-  return address
-
 # accepts address with street, city, zip, country, state
 # will return address with lat and lng set as floating point numbers
 # or directly return the address if already given
@@ -35,9 +19,6 @@ exports.geocode = (address, cbk) ->
 
 # calculates a routing distance between two geo location points
 exports.routeDistance = (from, to, cbk) ->
-  cleanGeometry from
-  cleanGeometry to
-
   Seq([from, to])
     .parEach_ (next, address) ->
       if address.lat? and address.lng?
