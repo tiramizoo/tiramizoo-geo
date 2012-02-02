@@ -13,7 +13,7 @@ describe 'Tiramizoo geo service', ->
 
   describe "when calculating route distance", ->
     it "should throw an error if there is no connection", (cbk) ->
-      geo.routeDistance "200,2", "300,3", (err, result) ->
+      geo.routeDistance {lat: 200, lng: 2}, {lat: 300, lng:3}, (err, result) ->
         should.exist(err)
         cbk()
 
@@ -34,7 +34,7 @@ describe 'Tiramizoo geo service', ->
         done()
 
       it "should calculate the distance", (cbk) ->
-        geo.routeDistance "1,1", "2,2", (err, result) ->
+        geo.routeDistance {lat: 1, lng: 1}, {lat: 2, lng: 2}, (err, result) ->
           result.distance?.should.equal 20
           cbk()
 
