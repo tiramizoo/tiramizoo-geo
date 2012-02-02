@@ -1,0 +1,22 @@
+{
+  "name": "tiramizoo-geo",
+  "description": "Geo coding functions for tiramizoo.com",
+  "version": "0.0.1",
+  "author": "Gregor Melhorn <gregor.melhorn@tiramizoo.com>",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/tiramizoo/tiramizoo-geo.git" 
+  },
+  "dependencies": {
+      "coffee-script": ">= 1.2.0"
+    , "request": ">= 2.9.100"
+    , "hashish": ">= 0.0.4"
+  },
+  "devDependencies": {
+    "mocha": ">= 0.10.2"
+  , "express": ">= 2.5.6"
+  , "should": ">= 0.5.1"
+  },
+  "scripts": { "test": "mocha" },
+  "engines": { "node": ">= 0.6.8" }
+}
