@@ -29,7 +29,7 @@ exports.geocode = (address, cbk) ->
 
 # calculates a routing distance between two geo location points
 exports.routeDistance = (from, to, cbk) ->
-  query = querystring.stringify {origin: from, destination: to}
+  query = querystring.stringify {origin: from, destination: to, sensor: false}
   maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
   request.get {url: maps_url, json: true, jar: false}, (err, res, body) ->
     if !err and (body?.routes?.length > 0)
