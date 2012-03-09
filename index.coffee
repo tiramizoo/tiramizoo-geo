@@ -19,6 +19,8 @@ exports.geocode = (address, cbk) ->
 
 # calculates a routing distance between two geo location points
 exports.routeDistance = (from, to, cbk) ->
+  alreadyThrown = false
+
   Seq([from, to])
     .parEach_ (next, address) ->
       if address.lat? and address.lng?
@@ -33,3 +35,8 @@ exports.routeDistance = (from, to, cbk) ->
           cbk null, {distance: parseFloat body.routes[0].legs[0].distance.value}
         else
           cbk err || 'Internal Server Error'
+    .catch (err) ->
+      # Guard against more than one call of cbk with err
+      # which happens when geocode fails for both addresses.
+      cbk err unless alreadyThrown
+      alreadyThrown = true

@@ -12,8 +12,13 @@ describe 'Tiramizoo geo service', ->
     done()
 
   describe "when calculating route distance", ->
-    it "should throw an error if there is no connection", (cbk) ->
+    it "should throw an error if there is no connection and lat/lng are provided", (cbk) ->
       geo.routeDistance {lat: 200, lng: 2}, {lat: 300, lng:3}, (err, result) ->
+        should.exist(err)
+        cbk()
+
+    it "should throw an error if there is no connection and addresses need to be geocoded", (cbk) ->
+      geo.routeDistance {street: "Sznelowiec 12b/10", city: "Pszczyna"}, {street: "Stalmacha 10", city: "Pszczyna"}, (err, result) ->
         should.exist(err)
         cbk()
 
