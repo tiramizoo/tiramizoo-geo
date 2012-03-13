@@ -1,5 +1,4 @@
 request = require 'request'
-Hash = require 'hashish'
 querystring = require 'querystring'
 Seq = require 'seq'
 
@@ -7,34 +6,53 @@ Seq = require 'seq'
 # will return address with lat and lng set as floating point numbers
 # or directly return the address if already given
 exports.geocode = (address, cbk) ->
-  query = querystring.stringify {sensor: false, language: 'de', address: Hash(address).values.join(', ')}
+  query = querystring.stringify(sensor: false, language: 'de', address: address)
   maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/geocode/json?#{query}"
-  request {url: maps_url, jar: false, json: true}, (err, res, body) ->
-    if !err and (body?.results?.length > 0)
-      address.lat = body.results[0].geometry.location.lat
-      address.lng = body.results[0].geometry.location.lng
-      cbk null, address
-    else
-      cbk err || 'No geocoding results'
+  request {url: maps_url, jar: false, json: true}, (err, res, body) -> cbk(err, body)
+
+exports.directions = (pickup, delivery, cbk) ->
+  query = querystring.stringify
+    origin: "#{pickup.geometry.lat},#{pickup.geometry.lng}"
+    destination: "#{delivery.geometry.lat},#{delivery.geometry.lng}"
+    sensor: false
+  maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
+  request.get {url: maps_url, json: true, jar: false}, (err, res, body) -> cbk(err, body)
 
 # calculates a routing distance between two geo location points
-exports.routeDistance = (from, to, cbk) ->
+exports.distance = (pickup, delivery, cbk) ->
   alreadyThrown = false
 
-  Seq([from, to])
+  Seq([pickup, delivery])
     .parEach_ (next, address) ->
-      if address.lat? and address.lng?
-        next null, address
-      else
-        exports.geocode address, next
-    .seq_ (next) ->
-      query = querystring.stringify {origin: "#{from.lat},#{from.lng}", destination: "#{to.lat},#{to.lng}", sensor: false}
-      maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
-      request.get {url: maps_url, json: true, jar: false}, (err, res, body) ->
-        if !err and (body?.routes?.length > 0)
-          cbk null, {distance: parseFloat body.routes[0].legs[0].distance.value}
-        else
-          cbk err || 'Internal Server Error'
+      exports.geocode(address, next)
+    .seq_ (next, pickups, deliveries) ->
+      next("Internal Server Error") if pickups.length isnt 1
+      next("Internal Server Error") if deliveries.length isnt 1
+
+      pickup = pickups[0]
+      delivery = deliveries[0]
+      exports.directions(pickup, delivery, (err, directions) -> next(err, pickup, delivery, directions))
+    .seq_ (next, pickup, delivery, directions) ->
+      # TODO: proper error messages
+      next("Internal Server Error") if directions.routes.length isnt 1
+
+      zip = (address) ->
+        address.address_components.filter (component) ->
+          "postal_code" in comoponent.types
+
+      pickup_zip = zip(pickup)[0]?.long_name
+      delivery_zip = zip(delivery)[0]?.long_name
+
+      result =
+        pickup_address: pickup
+        pickup_zip: pickup_zip
+        delivery_address: delivery
+        delivery_zip: delivery_zip
+        distances:
+          driving: directions.routes[0].legs[0].distance.value
+          straight_line: 666 # TODO: calculate straight line distance
+
+      next(null, result)
     .catch (err) ->
       # Guard against more than one call of cbk with err
       # which happens when geocode fails for both addresses.
