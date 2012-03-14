@@ -5,28 +5,44 @@ Seq = require "seq"
 # accepts address with street, city, zip, country, state
 # will return address with lat and lng set as floating point numbers
 # or directly return the address if already given
-geocode = (address, callback) ->
+exports.geocode = geocode = (address, callback) ->
   query = querystring.stringify(sensor: false, language: "de", address: address)
-  maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/geocode/json?#{query}"
-  request {url: maps_url, jar: false, json: true}, (error, response, body) ->
+  mapsUrl = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/geocode/json?#{query}"
+  request {url: mapsUrl, jar: false, json: true}, (error, response, body) ->
     if response?.statusCode isnt 200
       # TODO: proper error messages
       callback("Y U NO 200 GEOCODER?!?")
     else
       callback(error, body)
 
-directions = (pickup, delivery, callback) ->
+exports.directions = directions = (pickup, delivery, callback) ->
   query = querystring.stringify
     origin: "#{pickup.geometry.lat},#{pickup.geometry.lng}"
     destination: "#{delivery.geometry.lat},#{delivery.geometry.lng}"
     sensor: false
-  maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
-  request.get {url: maps_url, json: true, jar: false}, (error, response, body) ->
+  mapsUrl = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
+  request.get {url: mapsUrl, json: true, jar: false}, (error, response, body) ->
     if response?.statusCode isnt 200
       # TODO: proper error messages
       callback("Y U NO 200 DIRECTIONS?!?")
     else
       callback(error, body)
+
+exports.haversine = haversine = (from, to, radius = 6371) ->
+  lat1 = from.geometry.lat
+  lng1 = from.geometry.lng
+
+  lat2 = to.geometry.lat
+  lng2 = to.geometry.lng
+
+  dlat = (lat2 - lat1) * Math.PI / 180
+  dlng = (lng2 - lng1) * Math.PI / 180
+  lat1 = lat1 * Math.PI / 180
+  lat2 = lat2 * Math.PI / 180
+
+  a = Math.sin(dlat / 2) * Math.sin(dlat / 2) + Math.sin(dlng / 2) * Math.sin(dlng / 2) * Math.cos(lat1) * Math.cos(lat2)
+  c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  radius * c
 
 # calculates a routing distance between two addresses
 exports.distance = (pickup, delivery, callback) ->
@@ -58,17 +74,19 @@ exports.distance = (pickup, delivery, callback) ->
         address.address_components.filter (component) ->
           "postal_code" in component.types
 
-      driving_distance = routes[0].legs[0].distance.value
-      pickup_zip = zip(pickup)[0]?.long_name
-      delivery_zip = zip(delivery)[0]?.long_name
+      drivingDistance = routes[0].legs[0].distance.value
+      straightLineDistance = haversine(pickup, delivery)
+
+      pickupZip = zip(pickup)[0]?.long_name
+      deliveryZip = zip(delivery)[0]?.long_name
 
       callback null,
         pickup_address: pickup
-        pickup_zip: pickup_zip
+        pickup_zip: pickupZip
         delivery_address: delivery
-        delivery_zip: delivery_zip
+        delivery_zip: deliveryZip
         distances:
-          driving: driving_distance
-          straight_line: 666 # TODO: calculate straight line distance
+          driving: drivingDistance
+          straight_line: straightLineDistance
 
     .catch(callback)

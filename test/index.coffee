@@ -2,6 +2,12 @@ geo = require "../index"
 express = require "express"
 should = require "should"
 
+describe "geo.haversine", ->
+  it "returns a correct distance between points", (done) ->
+    distance = geo.haversine({geometry: {lat: 38.898556, lng: -77.037852}}, {geometry: {lat: 38.897147, lng: -77.043934}})
+    should.equal(distance, 0.5491557912038084)
+    done()
+
 describe "geo.distance", ->
   before (done) ->
     process.env.GOOGLE_MAPS_API_URL = "http://localhost:3001"
