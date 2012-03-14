@@ -9,11 +9,11 @@ geocode = (address, callback) ->
   query = querystring.stringify(sensor: false, language: "de", address: address)
   maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/geocode/json?#{query}"
   request {url: maps_url, jar: false, json: true}, (error, response, body) ->
-    if response?.statusCode != 200
-      callback(error, body)
-    else
+    if response?.statusCode isnt 200
       # TODO: proper error messages
-      callback("Y U NO 200?!?")
+      callback("Y U NO 200 GEOCODER?!?")
+    else
+      callback(error, body)
 
 directions = (pickup, delivery, callback) ->
   query = querystring.stringify
@@ -22,11 +22,11 @@ directions = (pickup, delivery, callback) ->
     sensor: false
   maps_url = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
   request.get {url: maps_url, json: true, jar: false}, (error, response, body) ->
-    if response?.statusCode != 200
-      callback(error, body)
-    else
+    if response?.statusCode isnt 200
       # TODO: proper error messages
-      callback("Y U NO 200?!?")
+      callback("Y U NO 200 DIRECTIONS?!?")
+    else
+      callback(error, body)
 
 # calculates a routing distance between two addresses
 exports.distance = (pickup, delivery, callback) ->

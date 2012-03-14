@@ -88,5 +88,5 @@ describe "geo.distance", ->
 
     it "should calculate the distance", (done) ->
       geo.distance "Kujawska 2, Gliwice", "Dworcowa 80, Gliwice", (error, result) ->
-        should.exist(error)
+        should.equal(result?.distances?.driving, 20)
         done()
