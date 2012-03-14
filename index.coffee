@@ -17,8 +17,8 @@ exports.geocode = geocode = (address, callback) ->
 
 exports.directions = directions = (pickup, delivery, callback) ->
   query = querystring.stringify
-    origin: "#{pickup.geometry.lat},#{pickup.geometry.lng}"
-    destination: "#{delivery.geometry.lat},#{delivery.geometry.lng}"
+    origin: "#{pickup.geometry.location.lat},#{pickup.geometry.location.lng}"
+    destination: "#{delivery.geometry.location.lat},#{delivery.geometry.location.lng}"
     sensor: false
   mapsUrl = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
   request.get {url: mapsUrl, json: true, jar: false}, (error, response, body) ->
@@ -29,11 +29,11 @@ exports.directions = directions = (pickup, delivery, callback) ->
       callback(error, body)
 
 exports.haversine = haversine = (from, to, radius = 6371) ->
-  lat1 = from.geometry.lat
-  lng1 = from.geometry.lng
+  lat1 = from.geometry.location.lat
+  lng1 = from.geometry.location.lng
 
-  lat2 = to.geometry.lat
-  lng2 = to.geometry.lng
+  lat2 = to.geometry.location.lat
+  lng2 = to.geometry.location.lng
 
   dlat = (lat2 - lat1) * Math.PI / 180
   dlng = (lng2 - lng1) * Math.PI / 180
