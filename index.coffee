@@ -69,15 +69,17 @@ exports.haversine = haversine = (from, to, radius = 6371) ->
 # callback - function to pass the result to
 
 exports.distance = (pickup, delivery, callback) ->
+  hackAlreadyCalled = false
+
   # WARNING: Seq parEach, parMap are fatally broken
   Seq()
-    .seq_ (next) ->
+    .par_ (next) ->
       geocode pickup, (error, body) ->
         next(error, body?.results)
 
-    .seq_ (next, pickups) ->
+    .par_ (next) ->
       geocode delivery, (error, body) ->
-        next(error, pickups, body?.results)
+        next(error, body?.results)
 
     .seq_ (next, pickups, deliveries) ->
       # TODO: proper error messages
@@ -112,4 +114,6 @@ exports.distance = (pickup, delivery, callback) ->
           driving: drivingDistance
           straight_line: straightLineDistance
 
-    .catch(callback)
+    .catch (err) ->
+      callback(err) unless hackAlreadyCalled
+      hackAlreadyCalled = true
