@@ -2,9 +2,12 @@ request = require "request"
 querystring = require "querystring"
 Seq = require "seq"
 
-# accepts address with street, city, zip, country, state
-# will return address with lat and lng set as floating point numbers
-# or directly return the address if already given
+# Internal: Geocode an address using Google's Geocoder
+#
+# address - the String with an address to geocode
+# callback - function to pass the result to
+#   (google.maps.GeocoderResult objects)
+
 exports.geocode = geocode = (address, callback) ->
   query = querystring.stringify(sensor: false, language: "de", address: address)
   mapsUrl = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/geocode/json?#{query}"
@@ -15,10 +18,17 @@ exports.geocode = geocode = (address, callback) ->
     else
       callback(error, body)
 
-exports.directions = directions = (pickup, delivery, callback) ->
+# Internal: Geocode an address using Google's DirectionsService
+#
+# from - from google.maps.GeocoderResult object
+# to - to google.maps.GeocoderResult object
+# callback - function to pass the result to
+#   (google.maps.DirectionsResult)
+
+exports.directions = directions = (from, to, callback) ->
   query = querystring.stringify
-    origin: "#{pickup.geometry.location.lat},#{pickup.geometry.location.lng}"
-    destination: "#{delivery.geometry.location.lat},#{delivery.geometry.location.lng}"
+    origin: "#{from.geometry.location.lat},#{from.geometry.location.lng}"
+    destination: "#{to.geometry.location.lat},#{to.geometry.location.lng}"
     sensor: false
   mapsUrl = "#{process.env.GOOGLE_MAPS_API_URL || 'http://maps.googleapis.com'}/maps/api/directions/json?#{query}"
   request.get {url: mapsUrl, json: true, jar: false}, (error, response, body) ->
@@ -27,6 +37,14 @@ exports.directions = directions = (pickup, delivery, callback) ->
       callback("Y U NO 200 DIRECTIONS?!?")
     else
       callback(error, body)
+
+# Internal: Calculate straight line distance using Haversine formula
+#
+# from - to google.maps.GeocoderResult object
+# to - to google.maps.GeocoderResult object
+# callback - function to pass the result to
+#
+# Returns Number
 
 exports.haversine = haversine = (from, to, radius = 6371) ->
   lat1 = from.geometry.location.lat
@@ -44,7 +62,12 @@ exports.haversine = haversine = (from, to, radius = 6371) ->
   c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   radius * c
 
-# calculates a routing distance between two addresses
+# Public: Calculate distance between two addresses
+#
+# pickup - String with pickup address
+# delivery - String with delivery address
+# callback - function to pass the result to
+
 exports.distance = (pickup, delivery, callback) ->
   # WARNING: Seq parEach, parMap are fatally broken
   Seq()
