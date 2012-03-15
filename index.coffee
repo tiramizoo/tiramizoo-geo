@@ -99,7 +99,8 @@ exports.distance = (pickup, delivery, callback) ->
         address.address_components.filter (component) ->
           "postal_code" in component.types
 
-      drivingDistance = routes[0].legs[0].distance.value
+      # TODO: take the shortest route instead of the first one
+      drivingDistance = routes[0].legs[0].distance.value / 1000
       straightLineDistance = haversine(pickup, delivery)
 
       pickupZip = zip(pickup)[0]?.long_name
